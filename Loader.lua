@@ -1,21 +1,20 @@
--- 🌌 Galaxy Hub v3.0
+-- 🌌 Galaxy Hub v3.1 (com controle de altura para mobile)
 
 local player = game.Players.LocalPlayer
-local uis = game:GetService("UserInputService")
 local run = game:GetService("RunService")
-local TweenService = game:GetService("TweenService")
 local ProximityPromptService = game:GetService("ProximityPromptService")
 
 local noclipAtivo = false
 local savedPos = nil
 local autoStealAtivo = false
+local flyHeight = 300 -- altura inicial
 
 -- Criar ScreenGui
 local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
 
 -- Frame principal
 local Frame = Instance.new("Frame", ScreenGui)
-Frame.Size = UDim2.new(0, 270, 0, 300)
+Frame.Size = UDim2.new(0, 270, 0, 350)
 Frame.Position = UDim2.new(0.5, -135, 0.4, 0)
 Frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 Frame.BackgroundTransparency = 0.2
@@ -28,7 +27,7 @@ local Title = Instance.new("TextLabel", Frame)
 Title.Size = UDim2.new(1, -40, 0, 30)
 Title.Position = UDim2.new(0, 10, 0, 5)
 Title.BackgroundTransparency = 1
-Title.Text = "🌌 Galaxy Hub v3.0"
+Title.Text = "🌌 Galaxy Hub v3.1"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.Font = Enum.Font.SourceSansBold
 Title.TextScaled = true
@@ -68,25 +67,6 @@ OpenBall.MouseButton1Click:Connect(function()
 end)
 
 ----------------
--- FUNÇÕES TP --
-----------------
-local function smoothTeleport(targetPos)
-    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-        local hrp = player.Character.HumanoidRootPart
-        local goal = {}
-        goal.CFrame = CFrame.new(targetPos + Vector3.new(0, 5, 0)) -- sobe 5 studs
-
-        local tweenInfo = TweenInfo.new(
-            (hrp.Position - targetPos).Magnitude / 60, -- velocidade proporcional
-            Enum.EasingStyle.Linear
-        )
-        local tween = TweenService:Create(hrp, tweenInfo, goal)
-        tween:Play()
-        tween.Completed:Wait()
-    end
-end
-
-----------------
 -- BOTÕES MAIN --
 ----------------
 local MarkButton = Instance.new("TextButton", Frame)
@@ -99,19 +79,9 @@ MarkButton.Font = Enum.Font.SourceSansBold
 MarkButton.TextScaled = true
 Instance.new("UICorner", MarkButton).CornerRadius = UDim.new(0, 12)
 
-local TpButton = Instance.new("TextButton", Frame)
-TpButton.Size = UDim2.new(1, 0, 0, 40)
-TpButton.Position = UDim2.new(0, 0, 0, 100)
-TpButton.Text = "🚀 Teleportar à Posição"
-TpButton.BackgroundColor3 = Color3.fromRGB(100, 200, 100)
-TpButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-TpButton.Font = Enum.Font.SourceSansBold
-TpButton.TextScaled = true
-Instance.new("UICorner", TpButton).CornerRadius = UDim.new(0, 12)
-
 local NoclipButton = Instance.new("TextButton", Frame)
 NoclipButton.Size = UDim2.new(1, 0, 0, 40)
-NoclipButton.Position = UDim2.new(0, 0, 0, 150)
+NoclipButton.Position = UDim2.new(0, 0, 0, 100)
 NoclipButton.Text = "👻 Noclip: OFF"
 NoclipButton.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
 NoclipButton.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -121,7 +91,7 @@ Instance.new("UICorner", NoclipButton).CornerRadius = UDim.new(0, 12)
 
 local AutoStealButton = Instance.new("TextButton", Frame)
 AutoStealButton.Size = UDim2.new(1, 0, 0, 40)
-AutoStealButton.Position = UDim2.new(0, 0, 0, 200)
+AutoStealButton.Position = UDim2.new(0, 0, 0, 150)
 AutoStealButton.Text = "🤖 AutoSteal: OFF"
 AutoStealButton.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
 AutoStealButton.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -129,18 +99,22 @@ AutoStealButton.Font = Enum.Font.SourceSansBold
 AutoStealButton.TextScaled = true
 Instance.new("UICorner", AutoStealButton).CornerRadius = UDim.new(0, 12)
 
+local FlyHeightButton = Instance.new("TextButton", Frame)
+FlyHeightButton.Size = UDim2.new(1, 0, 0, 40)
+FlyHeightButton.Position = UDim2.new(0, 0, 0, 200)
+FlyHeightButton.Text = "🛫 Altura: " .. flyHeight
+FlyHeightButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+FlyHeightButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+FlyHeightButton.Font = Enum.Font.SourceSansBold
+FlyHeightButton.TextScaled = true
+Instance.new("UICorner", FlyHeightButton).CornerRadius = UDim.new(0, 12)
+
 ----------------
 -- CONEXÕES --
 ----------------
 MarkButton.MouseButton1Click:Connect(function()
     if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
         savedPos = player.Character.HumanoidRootPart.Position
-    end
-end)
-
-TpButton.MouseButton1Click:Connect(function()
-    if savedPos then
-        smoothTeleport(savedPos)
     end
 end)
 
@@ -156,6 +130,19 @@ AutoStealButton.MouseButton1Click:Connect(function()
     AutoStealButton.BackgroundColor3 = autoStealAtivo and Color3.fromRGB(0,170,255) or Color3.fromRGB(255,80,80)
 end)
 
+FlyHeightButton.MouseButton1Click:Connect(function()
+    if flyHeight == 100 then
+        flyHeight = 200
+    elseif flyHeight == 200 then
+        flyHeight = 300
+    elseif flyHeight == 300 then
+        flyHeight = 400
+    else
+        flyHeight = 100
+    end
+    FlyHeightButton.Text = "🛫 Altura: " .. flyHeight
+end)
+
 run.Stepped:Connect(function()
     if noclipAtivo and player.Character then
         for _, part in pairs(player.Character:GetDescendants()) do
@@ -166,10 +153,21 @@ run.Stepped:Connect(function()
     end
 end)
 
--- AutoSteal automático usando a posição marcada
+-- AutoSteal com voo para cima
 ProximityPromptService.PromptTriggered:Connect(function(prompt, plr)
     if plr == player and autoStealAtivo and savedPos then
-        task.wait(1) -- delay de segurança
-        smoothTeleport(savedPos)
+        local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            -- voa alto
+            hrp.CFrame = CFrame.new(hrp.Position.X, flyHeight, hrp.Position.Z)
+            task.wait(1) -- tempo de segurança
+            -- executa interação
+            pcall(function()
+                fireproximityprompt(prompt)
+            end)
+            task.wait(0.5)
+            -- vai para o destino marcado
+            hrp.CFrame = CFrame.new(savedPos + Vector3.new(0, 5, 0))
+        end
     end
 end)
