@@ -8,7 +8,6 @@ local ProximityPromptService = game:GetService("ProximityPromptService")
 local noclipAtivo = false
 local savedPos = nil
 local autoStealAtivo = false
-local autoStealIndex = 1
 
 -- Coordenadas do AutoSteal
 local stealCoords = {
@@ -171,13 +170,12 @@ AutoStealButton.MouseButton1Click:Connect(function()
     AutoStealButton.BackgroundColor3 = autoStealAtivo and Color3.fromRGB(0,170,255) or Color3.fromRGB(255,80,80)
 end)
 
--- Função teleportar próximo
-local function teleportNext()
+-- AutoSteal: teleportar por TODAS as coords
+local function teleportAll()
     if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-        player.Character.HumanoidRootPart.CFrame = CFrame.new(stealCoords[autoStealIndex])
-        autoStealIndex += 1
-        if autoStealIndex > #stealCoords then
-            autoStealIndex = 1
+        for i = 1, #stealCoords do
+            player.Character.HumanoidRootPart.CFrame = CFrame.new(stealCoords[i])
+            task.wait(0.5) -- ⏳ intervalo de 0.5s entre cada teleporte
         end
     end
 end
@@ -185,7 +183,6 @@ end
 -- Ativa o AutoSteal ao interagir com qualquer ProximityPrompt
 ProximityPromptService.PromptTriggered:Connect(function(prompt, plr)
     if plr == player and autoStealAtivo then
-        task.wait(1) -- ⏳ espera 1 segundo
-        teleportNext()
+        teleportAll()
     end
 end)
