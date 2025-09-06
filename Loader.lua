@@ -1,173 +1,191 @@
-local a=game.Players.LocalPlayer
-local b=game:GetService("RunService")
-local c=false
-local d=nil
-local e=Instance.new("ScreenGui",game.CoreGui)
+--// Galaxy Hub Simplificado
 
-local f=Instance.new("Frame",e)
-f.Size=UDim2.new(0,270,0,350)
-f.Position=UDim2.new(0.5,-135,0.4,0)
-f.BackgroundColor3=Color3.fromRGB(40,40,40)
-f.BackgroundTransparency=0.2
-f.Active=true
-f.Draggable=true
-Instance.new("UICorner",f).CornerRadius=UDim.new(0,15)
+local player = game.Players.LocalPlayer
+local uis = game:GetService("UserInputService")
+local run = game:GetService("RunService")
+local ProximityPromptService = game:GetService("ProximityPromptService")
 
-local g=Instance.new("TextLabel",f)
-g.Size=UDim2.new(1,-40,0,30)
-g.Position=UDim2.new(0,10,0,5)
-g.BackgroundTransparency=1
-g.Text="🌌 Galaxy Hub"
-g.TextColor3=Color3.fromRGB(255,255,255)
-g.Font=Enum.Font.SourceSansBold
-g.TextScaled=true
-g.TextXAlignment=Enum.TextXAlignment.Left
+local noclipAtivo = false
+local savedPos = nil
+local autoStealAtivo = false
+local autoStealIndex = 1
 
-local h=Instance.new("TextButton",f)
-h.Size=UDim2.new(0,30,0,30)
-h.Position=UDim2.new(1,-35,0,5)
-h.Text="-"
-h.BackgroundColor3=Color3.fromRGB(255,80,80)
-h.TextColor3=Color3.fromRGB(255,255,255)
-h.Font=Enum.Font.SourceSansBold
-h.TextScaled=true
-Instance.new("UICorner",h).CornerRadius=UDim.new(1,0)
+-- Coordenadas do AutoSteal
+local stealCoords = {
+    Vector3.new(-338, 7, -75),
+    Vector3.new(-218, 7, -77),
+    Vector3.new(-104, 7, -77),
+    Vector3.new(4, 7, -79),
+    Vector3.new(-101, 7, 76),
+    Vector3.new(-219, 7, 74),
+    Vector3.new(-326, 7, 74)
+}
 
-local i=Instance.new("TextButton",e)
-i.Size=UDim2.new(0,50,0,50)
-i.Position=UDim2.new(0.1,0,0.8,0)
-i.Text="🌌"
-i.BackgroundColor3=Color3.fromRGB(0,170,255)
-i.TextColor3=Color3.fromRGB(255,255,255)
-i.Font=Enum.Font.SourceSansBold
-i.TextScaled=true
-i.Visible=false
-i.Active=true
-i.Draggable=true
-Instance.new("UICorner",i).CornerRadius=UDim.new(1,0)
+-- Criar GUI
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
 
-h.MouseButton1Click:Connect(function()
-    f.Visible=false
-    i.Visible=true
+-- Frame principal
+local Frame = Instance.new("Frame", ScreenGui)
+Frame.Size = UDim2.new(0, 270, 0, 320)
+Frame.Position = UDim2.new(0.5, -135, 0.4, 0)
+Frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+Frame.BackgroundTransparency = 0.2
+Frame.Active = true
+Frame.Draggable = true
+Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 15)
+
+-- Título
+local Title = Instance.new("TextLabel", Frame)
+Title.Size = UDim2.new(1, -40, 0, 30)
+Title.Position = UDim2.new(0, 10, 0, 5)
+Title.BackgroundTransparency = 1
+Title.Text = "🌌 Galaxy Hub"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.Font = Enum.Font.SourceSansBold
+Title.TextScaled = true
+Title.TextXAlignment = Enum.TextXAlignment.Left
+
+-- Minimizar
+local MinButton = Instance.new("TextButton", Frame)
+MinButton.Size = UDim2.new(0, 30, 0, 30)
+MinButton.Position = UDim2.new(1, -35, 0, 5)
+MinButton.Text = "-"
+MinButton.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
+MinButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+MinButton.Font = Enum.Font.SourceSansBold
+MinButton.TextScaled = true
+Instance.new("UICorner", MinButton).CornerRadius = UDim.new(1, 0)
+
+local OpenBall = Instance.new("TextButton", ScreenGui)
+OpenBall.Size = UDim2.new(0, 50, 0, 50)
+OpenBall.Position = UDim2.new(0.1, 0, 0.8, 0)
+OpenBall.Text = "🌌"
+OpenBall.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+OpenBall.TextColor3 = Color3.fromRGB(255, 255, 255)
+OpenBall.Font = Enum.Font.SourceSansBold
+OpenBall.TextScaled = true
+OpenBall.Visible = false
+OpenBall.Active = true
+OpenBall.Draggable = true
+Instance.new("UICorner", OpenBall).CornerRadius = UDim.new(1, 0)
+
+MinButton.MouseButton1Click:Connect(function()
+    Frame.Visible = false
+    OpenBall.Visible = true
 end)
-i.MouseButton1Click:Connect(function()
-    f.Visible=true
-    i.Visible=false
+OpenBall.MouseButton1Click:Connect(function()
+    Frame.Visible = true
+    OpenBall.Visible = false
 end)
 
--- Conteúdo
-local j=Instance.new("Frame",f)
-j.Size=UDim2.new(1,-20,1,-80)
-j.Position=UDim2.new(0,10,0,75)
-j.BackgroundTransparency=1
+----------------
+-- MAIN AREA  --
+----------------
+local MainFrame = Instance.new("Frame", Frame)
+MainFrame.Size = UDim2.new(1, -20, 1, -60)
+MainFrame.Position = UDim2.new(0, 10, 0, 50)
+MainFrame.BackgroundTransparency = 1
 
+-- Botão marcar posição
+local MarkButton = Instance.new("TextButton", MainFrame)
+MarkButton.Size = UDim2.new(1, 0, 0, 40)
+MarkButton.Position = UDim2.new(0, 0, 0, 0)
+MarkButton.Text = "📍 Marcar Posição"
+MarkButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+MarkButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+MarkButton.Font = Enum.Font.SourceSansBold
+MarkButton.TextScaled = true
+Instance.new("UICorner", MarkButton).CornerRadius = UDim.new(0, 12)
+
+-- Botão teleportar
+local TpButton = Instance.new("TextButton", MainFrame)
+TpButton.Size = UDim2.new(1, 0, 0, 40)
+TpButton.Position = UDim2.new(0, 0, 0, 50)
+TpButton.Text = "🚀 Teleportar à Posição"
+TpButton.BackgroundColor3 = Color3.fromRGB(100, 200, 100)
+TpButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+TpButton.Font = Enum.Font.SourceSansBold
+TpButton.TextScaled = true
+Instance.new("UICorner", TpButton).CornerRadius = UDim.new(0, 12)
+
+-- Botão Noclip
+local NoclipButton = Instance.new("TextButton", MainFrame)
+NoclipButton.Size = UDim2.new(1, 0, 0, 40)
+NoclipButton.Position = UDim2.new(0, 0, 0, 100)
+NoclipButton.Text = "👻 Noclip: OFF"
+NoclipButton.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
+NoclipButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+NoclipButton.Font = Enum.Font.SourceSansBold
+NoclipButton.TextScaled = true
+Instance.new("UICorner", NoclipButton).CornerRadius = UDim.new(0, 12)
+
+-- Botão AutoSteal
+local AutoStealButton = Instance.new("TextButton", MainFrame)
+AutoStealButton.Size = UDim2.new(1, 0, 0, 40)
+AutoStealButton.Position = UDim2.new(0, 0, 0, 150)
+AutoStealButton.Text = "💎 AutoSteal: OFF"
+AutoStealButton.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
+AutoStealButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+AutoStealButton.Font = Enum.Font.SourceSansBold
+AutoStealButton.TextScaled = true
+Instance.new("UICorner", AutoStealButton).CornerRadius = UDim.new(0, 12)
+
+----------------
+-- FUNÇÕES    --
+----------------
 -- Marcar posição
-local k=Instance.new("TextButton",j)
-k.Size=UDim2.new(1,0,0,40)
-k.Position=UDim2.new(0,0,0,0)
-k.Text="📍 Marcar Posição"
-k.BackgroundColor3=Color3.fromRGB(0,170,255)
-k.TextColor3=Color3.fromRGB(255,255,255)
-k.Font=Enum.Font.SourceSansBold
-k.TextScaled=true
-Instance.new("UICorner",k).CornerRadius=UDim.new(0,12)
-
--- TP
-local l=Instance.new("TextButton",j)
-l.Size=UDim2.new(0.8,-5,0,40)
-l.Position=UDim2.new(0,0,0,50)
-l.Text="🚀 Teleportar à Posição"
-l.BackgroundColor3=Color3.fromRGB(100,200,100)
-l.TextColor3=Color3.fromRGB(255,255,255)
-l.Font=Enum.Font.SourceSansBold
-l.TextScaled=true
-Instance.new("UICorner",l).CornerRadius=UDim.new(0,12)
-
-local m=Instance.new("TextButton",j)
-m.Size=UDim2.new(0.2,0,0,40)
-m.Position=UDim2.new(0.8,5,0,50)
-m.Text="⚙️"
-m.BackgroundColor3=Color3.fromRGB(80,80,80)
-m.TextColor3=Color3.fromRGB(255,255,255)
-m.Font=Enum.Font.SourceSansBold
-m.TextScaled=true
-Instance.new("UICorner",m).CornerRadius=UDim.new(1,0)
-
-k.MouseButton1Click:Connect(function()
-    if a.Character and a.Character:FindFirstChild("HumanoidRootPart") then
-        d=a.Character.HumanoidRootPart.Position
-        k.Visible=false
+MarkButton.MouseButton1Click:Connect(function()
+    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        savedPos = player.Character.HumanoidRootPart.Position
     end
 end)
-l.MouseButton1Click:Connect(function()
-    if d and a.Character and a.Character:FindFirstChild("HumanoidRootPart") then
-        a.Character.HumanoidRootPart.CFrame=CFrame.new(d)
+
+-- Teleportar
+TpButton.MouseButton1Click:Connect(function()
+    if savedPos and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        player.Character.HumanoidRootPart.CFrame = CFrame.new(savedPos)
     end
 end)
-m.MouseButton1Click:Connect(function() k.Visible=true end)
 
 -- Noclip
-local n=Instance.new("TextButton",j)
-n.Size=UDim2.new(1,0,0,40)
-n.Position=UDim2.new(0,0,0,100)
-n.Text="👻 Noclip: OFF"
-n.BackgroundColor3=Color3.fromRGB(255,80,80)
-n.TextColor3=Color3.fromRGB(255,255,255)
-n.Font=Enum.Font.SourceSansBold
-n.TextScaled=true
-Instance.new("UICorner",n).CornerRadius=UDim.new(0,12)
-
-n.MouseButton1Click:Connect(function()
-    c=not c
-    n.Text=c and "👻 Noclip: ON" or "👻 Noclip: OFF"
-    n.BackgroundColor3=c and Color3.fromRGB(0,170,255) or Color3.fromRGB(255,80,80)
+NoclipButton.MouseButton1Click:Connect(function()
+    noclipAtivo = not noclipAtivo
+    NoclipButton.Text = noclipAtivo and "👻 Noclip: ON" or "👻 Noclip: OFF"
+    NoclipButton.BackgroundColor3 = noclipAtivo and Color3.fromRGB(0,170,255) or Color3.fromRGB(255,80,80)
 end)
 
-b.Stepped:Connect(function()
-    if c and a.Character then
-        for _,o in pairs(a.Character:GetDescendants()) do
-            if o:IsA("BasePart") then o.CanCollide=false end
+run.Stepped:Connect(function()
+    if noclipAtivo and player.Character then
+        for _, part in pairs(player.Character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = false
+            end
         end
     end
 end)
 
--- AutoSteal
-local coords={
-    Vector3.new(-338,7,-75),
-    Vector3.new(-218,7,-77),
-    Vector3.new(-104,7,-77),
-    Vector3.new(4,7,-79),
-    Vector3.new(-101,7,76),
-    Vector3.new(-219,7,74),
-    Vector3.new(-326,7,74)
-}
-local auto=false
-
-local p=Instance.new("TextButton",j)
-p.Size=UDim2.new(1,0,0,40)
-p.Position=UDim2.new(0,0,0,150)
-p.Text="💰 AutoSteal: OFF"
-p.BackgroundColor3=Color3.fromRGB(255,80,80)
-p.TextColor3=Color3.fromRGB(255,255,255)
-p.Font=Enum.Font.SourceSansBold
-p.TextScaled=true
-Instance.new("UICorner",p).CornerRadius=UDim.new(0,12)
-
-p.MouseButton1Click:Connect(function()
-    auto=not auto
-    p.Text=auto and "💰 AutoSteal: ON" or "💰 AutoSteal: OFF"
-    p.BackgroundColor3=auto and Color3.fromRGB(0,170,255) or Color3.fromRGB(255,80,80)
+-- AutoSteal toggle
+AutoStealButton.MouseButton1Click:Connect(function()
+    autoStealAtivo = not autoStealAtivo
+    AutoStealButton.Text = autoStealAtivo and "💎 AutoSteal: ON" or "💎 AutoSteal: OFF"
+    AutoStealButton.BackgroundColor3 = autoStealAtivo and Color3.fromRGB(0,170,255) or Color3.fromRGB(255,80,80)
 end)
 
-game.DescendantAdded:Connect(function(q)
-    if q:IsA("ProximityPrompt") then
-        q.Triggered:Connect(function()
-            if auto and a.Character and a.Character:FindFirstChild("HumanoidRootPart") then
-                for r=1,#coords do
-                    a.Character.HumanoidRootPart.CFrame=CFrame.new(coords[r])
-                    task.wait(0.2) -- rápido
-                end
-            end
-        end)
+-- Função teleportar próximo
+local function teleportNext()
+    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        player.Character.HumanoidRootPart.CFrame = CFrame.new(stealCoords[autoStealIndex])
+        autoStealIndex += 1
+        if autoStealIndex > #stealCoords then
+            autoStealIndex = 1
+        end
+    end
+end
+
+-- Ativa o AutoSteal ao interagir com qualquer ProximityPrompt
+ProximityPromptService.PromptTriggered:Connect(function(prompt, plr)
+    if plr == player and autoStealAtivo then
+        task.wait(1) -- ⏳ espera 1 segundo
+        teleportNext()
     end
 end)
