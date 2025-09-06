@@ -1,31 +1,21 @@
---// Galaxy Hub Simplificado
+-- 🌌 Galaxy Hub v3.0
 
 local player = game.Players.LocalPlayer
 local uis = game:GetService("UserInputService")
 local run = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
 local ProximityPromptService = game:GetService("ProximityPromptService")
 
 local noclipAtivo = false
 local savedPos = nil
 local autoStealAtivo = false
 
--- Coordenadas do AutoSteal
-local stealCoords = {
-    Vector3.new(-338, 7, -75),
-    Vector3.new(-218, 7, -77),
-    Vector3.new(-104, 7, -77),
-    Vector3.new(4, 7, -79),
-    Vector3.new(-101, 7, 76),
-    Vector3.new(-219, 7, 74),
-    Vector3.new(-326, 7, 74)
-}
-
--- Criar GUI
+-- Criar ScreenGui
 local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
 
 -- Frame principal
 local Frame = Instance.new("Frame", ScreenGui)
-Frame.Size = UDim2.new(0, 270, 0, 320)
+Frame.Size = UDim2.new(0, 270, 0, 300)
 Frame.Position = UDim2.new(0.5, -135, 0.4, 0)
 Frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 Frame.BackgroundTransparency = 0.2
@@ -38,7 +28,7 @@ local Title = Instance.new("TextLabel", Frame)
 Title.Size = UDim2.new(1, -40, 0, 30)
 Title.Position = UDim2.new(0, 10, 0, 5)
 Title.BackgroundTransparency = 1
-Title.Text = "🌌 Galaxy Hub"
+Title.Text = "🌌 Galaxy Hub v3.0"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.Font = Enum.Font.SourceSansBold
 Title.TextScaled = true
@@ -78,17 +68,30 @@ OpenBall.MouseButton1Click:Connect(function()
 end)
 
 ----------------
--- MAIN AREA  --
+-- FUNÇÕES TP --
 ----------------
-local MainFrame = Instance.new("Frame", Frame)
-MainFrame.Size = UDim2.new(1, -20, 1, -60)
-MainFrame.Position = UDim2.new(0, 10, 0, 50)
-MainFrame.BackgroundTransparency = 1
+local function smoothTeleport(targetPos)
+    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        local hrp = player.Character.HumanoidRootPart
+        local goal = {}
+        goal.CFrame = CFrame.new(targetPos + Vector3.new(0, 5, 0)) -- sobe 5 studs
 
--- Botão marcar posição
-local MarkButton = Instance.new("TextButton", MainFrame)
+        local tweenInfo = TweenInfo.new(
+            (hrp.Position - targetPos).Magnitude / 60, -- velocidade proporcional
+            Enum.EasingStyle.Linear
+        )
+        local tween = TweenService:Create(hrp, tweenInfo, goal)
+        tween:Play()
+        tween.Completed:Wait()
+    end
+end
+
+----------------
+-- BOTÕES MAIN --
+----------------
+local MarkButton = Instance.new("TextButton", Frame)
 MarkButton.Size = UDim2.new(1, 0, 0, 40)
-MarkButton.Position = UDim2.new(0, 0, 0, 0)
+MarkButton.Position = UDim2.new(0, 0, 0, 50)
 MarkButton.Text = "📍 Marcar Posição"
 MarkButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
 MarkButton.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -96,10 +99,9 @@ MarkButton.Font = Enum.Font.SourceSansBold
 MarkButton.TextScaled = true
 Instance.new("UICorner", MarkButton).CornerRadius = UDim.new(0, 12)
 
--- Botão teleportar
-local TpButton = Instance.new("TextButton", MainFrame)
+local TpButton = Instance.new("TextButton", Frame)
 TpButton.Size = UDim2.new(1, 0, 0, 40)
-TpButton.Position = UDim2.new(0, 0, 0, 50)
+TpButton.Position = UDim2.new(0, 0, 0, 100)
 TpButton.Text = "🚀 Teleportar à Posição"
 TpButton.BackgroundColor3 = Color3.fromRGB(100, 200, 100)
 TpButton.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -107,10 +109,9 @@ TpButton.Font = Enum.Font.SourceSansBold
 TpButton.TextScaled = true
 Instance.new("UICorner", TpButton).CornerRadius = UDim.new(0, 12)
 
--- Botão Noclip
-local NoclipButton = Instance.new("TextButton", MainFrame)
+local NoclipButton = Instance.new("TextButton", Frame)
 NoclipButton.Size = UDim2.new(1, 0, 0, 40)
-NoclipButton.Position = UDim2.new(0, 0, 0, 100)
+NoclipButton.Position = UDim2.new(0, 0, 0, 150)
 NoclipButton.Text = "👻 Noclip: OFF"
 NoclipButton.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
 NoclipButton.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -118,11 +119,10 @@ NoclipButton.Font = Enum.Font.SourceSansBold
 NoclipButton.TextScaled = true
 Instance.new("UICorner", NoclipButton).CornerRadius = UDim.new(0, 12)
 
--- Botão AutoSteal
-local AutoStealButton = Instance.new("TextButton", MainFrame)
+local AutoStealButton = Instance.new("TextButton", Frame)
 AutoStealButton.Size = UDim2.new(1, 0, 0, 40)
-AutoStealButton.Position = UDim2.new(0, 0, 0, 150)
-AutoStealButton.Text = "💎 AutoSteal: OFF"
+AutoStealButton.Position = UDim2.new(0, 0, 0, 200)
+AutoStealButton.Text = "🤖 AutoSteal: OFF"
 AutoStealButton.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
 AutoStealButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 AutoStealButton.Font = Enum.Font.SourceSansBold
@@ -130,27 +130,30 @@ AutoStealButton.TextScaled = true
 Instance.new("UICorner", AutoStealButton).CornerRadius = UDim.new(0, 12)
 
 ----------------
--- FUNÇÕES    --
+-- CONEXÕES --
 ----------------
--- Marcar posição
 MarkButton.MouseButton1Click:Connect(function()
     if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
         savedPos = player.Character.HumanoidRootPart.Position
     end
 end)
 
--- Teleportar
 TpButton.MouseButton1Click:Connect(function()
-    if savedPos and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-        player.Character.HumanoidRootPart.CFrame = CFrame.new(savedPos)
+    if savedPos then
+        smoothTeleport(savedPos)
     end
 end)
 
--- Noclip
 NoclipButton.MouseButton1Click:Connect(function()
     noclipAtivo = not noclipAtivo
     NoclipButton.Text = noclipAtivo and "👻 Noclip: ON" or "👻 Noclip: OFF"
     NoclipButton.BackgroundColor3 = noclipAtivo and Color3.fromRGB(0,170,255) or Color3.fromRGB(255,80,80)
+end)
+
+AutoStealButton.MouseButton1Click:Connect(function()
+    autoStealAtivo = not autoStealAtivo
+    AutoStealButton.Text = autoStealAtivo and "🤖 AutoSteal: ON" or "🤖 AutoSteal: OFF"
+    AutoStealButton.BackgroundColor3 = autoStealAtivo and Color3.fromRGB(0,170,255) or Color3.fromRGB(255,80,80)
 end)
 
 run.Stepped:Connect(function()
@@ -163,26 +166,10 @@ run.Stepped:Connect(function()
     end
 end)
 
--- AutoSteal toggle
-AutoStealButton.MouseButton1Click:Connect(function()
-    autoStealAtivo = not autoStealAtivo
-    AutoStealButton.Text = autoStealAtivo and "💎 AutoSteal: ON" or "💎 AutoSteal: OFF"
-    AutoStealButton.BackgroundColor3 = autoStealAtivo and Color3.fromRGB(0,170,255) or Color3.fromRGB(255,80,80)
-end)
-
--- AutoSteal: teleportar por TODAS as coords
-local function teleportAll()
-    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-        for i = 1, #stealCoords do
-            player.Character.HumanoidRootPart.CFrame = CFrame.new(stealCoords[i])
-            task.wait(0.5) -- ⏳ intervalo de 0.5s entre cada teleporte
-        end
-    end
-end
-
--- Ativa o AutoSteal ao interagir com qualquer ProximityPrompt
+-- AutoSteal automático usando a posição marcada
 ProximityPromptService.PromptTriggered:Connect(function(prompt, plr)
-    if plr == player and autoStealAtivo then
-        teleportAll()
+    if plr == player and autoStealAtivo and savedPos then
+        task.wait(1) -- delay de segurança
+        smoothTeleport(savedPos)
     end
 end)
