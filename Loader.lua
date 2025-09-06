@@ -1,4 +1,4 @@
--- 🌌 Galaxy Hub v3.3
+-- 🌌 Galaxy Hub v3.3 (fix OpenBall)
 local player = game.Players.LocalPlayer
 local uis = game:GetService("UserInputService")
 local run = game:GetService("RunService")
@@ -8,9 +8,11 @@ local noclipAtivo = false
 local savedPos = nil
 local autoStealAtivo = false
 
--- Criar ScreenGui
+-- Criar ScreenGui em PlayerGui
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Parent = game.CoreGui
+ScreenGui.Name = "GalaxyHubUI"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = player:WaitForChild("PlayerGui")
 
 -- Frame principal
 local Frame = Instance.new("Frame", ScreenGui)
