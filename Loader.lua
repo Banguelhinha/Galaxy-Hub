@@ -1,9 +1,8 @@
--- 🌌 Galaxy Hub v3.7 FINAL
--- Funções: Marcar Posição, AutoSteal (Tween), Noclip, Minimizar com bolinha
+-- 🌌 Galaxy Hub v3.9 FINAL
+-- Funções: Marcar Posição, AutoSteal (TP Instantâneo), Noclip, Minimizar com bolinha
 
 -- Serviços
 local Players = game:GetService("Players")
-local TweenService = game:GetService("TweenService")
 local ProximityPromptService = game:GetService("ProximityPromptService")
 local RunService = game:GetService("RunService")
 
@@ -28,7 +27,7 @@ Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 10)
 
 local Title = Instance.new("TextLabel", Frame)
 Title.Size = UDim2.new(1, 0, 0, 40)
-Title.Text = "🌌 Galaxy Hub v3.7"
+Title.Text = "🌌 Galaxy Hub v3.9"
 Title.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.Font = Enum.Font.SourceSansBold
@@ -69,23 +68,11 @@ OpenBall.MouseButton1Click:Connect(function()
     OpenBall.Visible = false
 end)
 
--- Função teleporte suave
-local function smoothTeleport(targetPos)
+-- Função TP instantâneo
+local function instantTeleport(targetPos)
     if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
         local hrp = player.Character.HumanoidRootPart
-        hrp.AssemblyLinearVelocity = Vector3.zero
-        hrp.AssemblyAngularVelocity = Vector3.zero
-
-        local dist = (hrp.Position - targetPos).Magnitude
-        local duration = dist > 100 and 4 or 0.5
-
-        local tween = TweenService:Create(
-            hrp,
-            TweenInfo.new(duration, Enum.EasingStyle.Linear),
-            {CFrame = CFrame.new(targetPos)}
-        )
-        tween:Play()
-        tween.Completed:Wait()
+        hrp.CFrame = CFrame.new(targetPos)
     end
 end
 
@@ -132,11 +119,11 @@ ProximityPromptService.PromptTriggered:Connect(function(prompt, plr)
         if holdTime > 0 then
             task.delay(holdTime, function()
                 if autoStealAtivo and player.Character and savedPos then
-                    smoothTeleport(savedPos)
+                    instantTeleport(savedPos)
                 end
             end)
         else
-            smoothTeleport(savedPos)
+            instantTeleport(savedPos)
         end
     end
 end)
