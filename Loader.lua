@@ -1,5 +1,4 @@
---// Galaxy Hub Simplificado + Infinite Jump + ESP Box
-
+--// Galaxy Hub Atualizado
 local player = game.Players.LocalPlayer
 local players = game:GetService("Players")
 local uis = game:GetService("UserInputService")
@@ -11,6 +10,7 @@ local savedPos = nil
 local autoStealAtivo = false
 local infJumpAtivo = false
 local espAtivo = false
+local speedAtivo = false
 
 -- Coordenadas do AutoSteal
 local stealCoords = {
@@ -20,7 +20,8 @@ local stealCoords = {
     Vector3.new(4, 7, -79),
     Vector3.new(-101, 7, 76),
     Vector3.new(-219, 7, 74),
-    Vector3.new(-326, 7, 74)
+    Vector3.new(-326, 7, 74),
+    Vector3.new(16, 7, 73) -- nova coordenada
 }
 
 -- Criar GUI
@@ -28,8 +29,8 @@ local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
 
 -- Frame principal
 local Frame = Instance.new("Frame", ScreenGui)
-Frame.Size = UDim2.new(0, 270, 0, 420)
-Frame.Position = UDim2.new(0.5, -135, 0.35, 0)
+Frame.Size = UDim2.new(0, 250, 0, 345)
+Frame.Position = UDim2.new(0.5, -125, 0.35, 0)
 Frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 Frame.BackgroundTransparency = 0.2
 Frame.Active = true
@@ -88,27 +89,28 @@ MainFrame.Size = UDim2.new(1, -20, 1, -60)
 MainFrame.Position = UDim2.new(0, 10, 0, 50)
 MainFrame.BackgroundTransparency = 1
 
--- Função criar botão
+-- Criar botão
 local function criarBotao(texto, posY, cor)
     local btn = Instance.new("TextButton", MainFrame)
-    btn.Size = UDim2.new(1, 0, 0, 40)
+    btn.Size = UDim2.new(1, 0, 0, 35)
     btn.Position = UDim2.new(0, 0, 0, posY)
     btn.Text = texto
     btn.BackgroundColor3 = cor or Color3.fromRGB(0,170,255)
     btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     btn.Font = Enum.Font.SourceSansBold
     btn.TextScaled = true
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 12)
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 10)
     return btn
 end
 
 -- Botões
-local MarkButton = criarBotao("📍 Marcar Posição", 0, Color3.fromRGB(0,170,255))
-local TpButton = criarBotao("🚀 Teleportar à Posição", 50, Color3.fromRGB(100,200,100))
-local NoclipButton = criarBotao("👻 Noclip: OFF", 100, Color3.fromRGB(255,80,80))
-local AutoStealButton = criarBotao("💎 AutoSteal: OFF", 150, Color3.fromRGB(255,80,80))
-local InfJumpButton = criarBotao("🌀 Infinite Jump: OFF", 200, Color3.fromRGB(255,80,80))
-local ESPButton = criarBotao("👁️ ESP: OFF", 250, Color3.fromRGB(255,80,80))
+local MarkButton = criarBotao("📍 Marcar Posição", 0)
+local TpButton = criarBotao("🚀 Teleportar", 40, Color3.fromRGB(100,200,100))
+local NoclipButton = criarBotao("👻 Noclip: OFF", 80, Color3.fromRGB(255,80,80))
+local AutoStealButton = criarBotao("💎 AutoSteal: OFF", 120, Color3.fromRGB(255,80,80))
+local InfJumpButton = criarBotao("🌀 Infinite Jump: OFF", 160, Color3.fromRGB(255,80,80))
+local ESPButton = criarBotao("👁️ ESP: OFF", 200, Color3.fromRGB(255,80,80))
+local SpeedButton = criarBotao("⚡ Speed Boost: OFF", 240, Color3.fromRGB(255,80,80))
 
 ----------------
 -- FUNÇÕES    --
@@ -183,22 +185,17 @@ end)
 -- ESP (Box + Nome)
 local function criarESP(plr)
     if plr == player then return end
-
     local function aplicarESP(char)
-        -- Box
         if char:FindFirstChild("HumanoidRootPart") then
             local box = Instance.new("BoxHandleAdornment")
             box.Name = "ESPBox"
             box.Size = Vector3.new(4, 6, 2)
             box.Color3 = Color3.fromRGB(0,170,255)
             box.Transparency = 0.5
-            box.ZIndex = 0
             box.AlwaysOnTop = true
             box.Adornee = char.HumanoidRootPart
             box.Parent = char.HumanoidRootPart
         end
-
-        -- Nome
         if char:FindFirstChild("Head") then
             local billboard = Instance.new("BillboardGui")
             billboard.Name = "ESPName"
@@ -207,7 +204,6 @@ local function criarESP(plr)
             billboard.StudsOffset = Vector3.new(0,2,0)
             billboard.AlwaysOnTop = true
             billboard.Parent = char
-
             local text = Instance.new("TextLabel", billboard)
             text.Size = UDim2.new(1,0,1,0)
             text.BackgroundTransparency = 1
@@ -218,7 +214,6 @@ local function criarESP(plr)
             text.TextScaled = true
         end
     end
-
     if plr.Character then
         aplicarESP(plr.Character)
     end
@@ -232,7 +227,6 @@ ESPButton.MouseButton1Click:Connect(function()
     espAtivo = not espAtivo
     ESPButton.Text = espAtivo and "👁️ ESP: ON" or "👁️ ESP: OFF"
     ESPButton.BackgroundColor3 = espAtivo and Color3.fromRGB(0,170,255) or Color3.fromRGB(255,80,80)
-
     if espAtivo then
         for _, plr in pairs(players:GetPlayers()) do
             criarESP(plr)
@@ -249,5 +243,16 @@ ESPButton.MouseButton1Click:Connect(function()
                 end
             end
         end
+    end
+end)
+
+-- Speed Boost (versão simples)
+SpeedButton.MouseButton1Click:Connect(function()
+    speedAtivo = not speedAtivo
+    SpeedButton.Text = speedAtivo and "⚡ Speed Boost: ON" or "⚡ Speed Boost: OFF"
+    SpeedButton.BackgroundColor3 = speedAtivo and Color3.fromRGB(0,170,255) or Color3.fromRGB(255,80,80)
+
+    if player.Character and player.Character:FindFirstChild("Humanoid") then
+        player.Character.Humanoid.WalkSpeed = speedAtivo and 50 or 16
     end
 end)
