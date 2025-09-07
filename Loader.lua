@@ -1,38 +1,48 @@
--- 🌌 Galaxy Hub v3.9 FINAL
--- Funções: Marcar Posição, AutoSteal (TP Instantâneo), Noclip, Minimizar com bolinha
+--// Galaxy Hub Simplificado
 
--- Serviços
-local Players = game:GetService("Players")
+local player = game.Players.LocalPlayer
+local uis = game:GetService("UserInputService")
+local run = game:GetService("RunService")
 local ProximityPromptService = game:GetService("ProximityPromptService")
-local RunService = game:GetService("RunService")
 
-local player = Players.LocalPlayer
+local noclipAtivo = false
 local savedPos = nil
 local autoStealAtivo = false
-local noclipAtivo = false
 
--- GUI principal
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "GalaxyHub"
-ScreenGui.Parent = player:WaitForChild("PlayerGui")
+-- Coordenadas do AutoSteal
+local stealCoords = {
+    Vector3.new(-338, 7, -75),
+    Vector3.new(-218, 7, -77),
+    Vector3.new(-104, 7, -77),
+    Vector3.new(4, 7, -79),
+    Vector3.new(-101, 7, 76),
+    Vector3.new(-219, 7, 74),
+    Vector3.new(-326, 7, 74)
+}
 
-local Frame = Instance.new("Frame")
-Frame.Size = UDim2.new(0, 250, 0, 300)
-Frame.Position = UDim2.new(0.1, 0, 0.2, 0)
-Frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+-- Criar GUI
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+
+-- Frame principal
+local Frame = Instance.new("Frame", ScreenGui)
+Frame.Size = UDim2.new(0, 270, 0, 320)
+Frame.Position = UDim2.new(0.5, -135, 0.4, 0)
+Frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+Frame.BackgroundTransparency = 0.2
 Frame.Active = true
 Frame.Draggable = true
-Frame.Parent = ScreenGui
-Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 10)
+Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 15)
 
+-- Título
 local Title = Instance.new("TextLabel", Frame)
-Title.Size = UDim2.new(1, 0, 0, 40)
-Title.Text = "🌌 Galaxy Hub v3.9"
-Title.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+Title.Size = UDim2.new(1, -40, 0, 30)
+Title.Position = UDim2.new(0, 10, 0, 5)
+Title.BackgroundTransparency = 1
+Title.Text = "🌌 Galaxy Hub"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.Font = Enum.Font.SourceSansBold
 Title.TextScaled = true
-Instance.new("UICorner", Title).CornerRadius = UDim.new(0, 10)
+Title.TextXAlignment = Enum.TextXAlignment.Left
 
 -- Minimizar
 local MinButton = Instance.new("TextButton", Frame)
@@ -47,7 +57,7 @@ Instance.new("UICorner", MinButton).CornerRadius = UDim.new(1, 0)
 
 local OpenBall = Instance.new("TextButton", ScreenGui)
 OpenBall.Size = UDim2.new(0, 50, 0, 50)
-OpenBall.Position = UDim2.new(0.05, 0, 0.8, 0)
+OpenBall.Position = UDim2.new(0.1, 0, 0.8, 0)
 OpenBall.Text = "🌌"
 OpenBall.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
 OpenBall.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -62,94 +72,117 @@ MinButton.MouseButton1Click:Connect(function()
     Frame.Visible = false
     OpenBall.Visible = true
 end)
-
 OpenBall.MouseButton1Click:Connect(function()
     Frame.Visible = true
     OpenBall.Visible = false
 end)
 
--- Função TP instantâneo
-local function instantTeleport(targetPos)
-    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-        local hrp = player.Character.HumanoidRootPart
-        hrp.CFrame = CFrame.new(targetPos)
-    end
-end
+----------------
+-- MAIN AREA  --
+----------------
+local MainFrame = Instance.new("Frame", Frame)
+MainFrame.Size = UDim2.new(1, -20, 1, -60)
+MainFrame.Position = UDim2.new(0, 10, 0, 50)
+MainFrame.BackgroundTransparency = 1
 
--- Botão Marcar Posição
-local markButton = Instance.new("TextButton", Frame)
-markButton.Size = UDim2.new(0.8, 0, 0, 40)
-markButton.Position = UDim2.new(0.1, 0, 0.2, 0)
-markButton.Text = "📍 Marcar Posição"
-markButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
-markButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-markButton.Font = Enum.Font.SourceSansBold
-markButton.TextScaled = true
-Instance.new("UICorner", markButton).CornerRadius = UDim.new(0, 8)
+-- Botão marcar posição
+local MarkButton = Instance.new("TextButton", MainFrame)
+MarkButton.Size = UDim2.new(1, 0, 0, 40)
+MarkButton.Position = UDim2.new(0, 0, 0, 0)
+MarkButton.Text = "📍 Marcar Posição"
+MarkButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+MarkButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+MarkButton.Font = Enum.Font.SourceSansBold
+MarkButton.TextScaled = true
+Instance.new("UICorner", MarkButton).CornerRadius = UDim.new(0, 12)
 
-markButton.MouseButton1Click:Connect(function()
-    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-        savedPos = player.Character.HumanoidRootPart.Position
-        markButton.Text = "📍 Posição Marcada!"
-        task.wait(1)
-        markButton.Text = "📍 Marcar Posição"
-    end
-end)
-
--- Botão AutoSteal
-local stealButton = Instance.new("TextButton", Frame)
-stealButton.Size = UDim2.new(0.8, 0, 0, 40)
-stealButton.Position = UDim2.new(0.1, 0, 0.35, 0)
-stealButton.Text = "💰 AutoSteal OFF"
-stealButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
-stealButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-stealButton.Font = Enum.Font.SourceSansBold
-stealButton.TextScaled = true
-Instance.new("UICorner", stealButton).CornerRadius = UDim.new(0, 8)
-
-stealButton.MouseButton1Click:Connect(function()
-    autoStealAtivo = not autoStealAtivo
-    stealButton.Text = autoStealAtivo and "💰 AutoSteal ON" or "💰 AutoSteal OFF"
-end)
-
--- AutoSteal: só depois de terminar interação completa
-ProximityPromptService.PromptTriggered:Connect(function(prompt, plr)
-    if autoStealAtivo and plr == player and savedPos then
-        local holdTime = prompt.HoldDuration
-        if holdTime > 0 then
-            task.delay(holdTime, function()
-                if autoStealAtivo and player.Character and savedPos then
-                    instantTeleport(savedPos)
-                end
-            end)
-        else
-            instantTeleport(savedPos)
-        end
-    end
-end)
+-- Botão teleportar
+local TpButton = Instance.new("TextButton", MainFrame)
+TpButton.Size = UDim2.new(1, 0, 0, 40)
+TpButton.Position = UDim2.new(0, 0, 0, 50)
+TpButton.Text = "🚀 Teleportar à Posição"
+TpButton.BackgroundColor3 = Color3.fromRGB(100, 200, 100)
+TpButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+TpButton.Font = Enum.Font.SourceSansBold
+TpButton.TextScaled = true
+Instance.new("UICorner", TpButton).CornerRadius = UDim.new(0, 12)
 
 -- Botão Noclip
-local noclipButton = Instance.new("TextButton", Frame)
-noclipButton.Size = UDim2.new(0.8, 0, 0, 40)
-noclipButton.Position = UDim2.new(0.1, 0, 0.5, 0)
-noclipButton.Text = "🚫 Noclip OFF"
-noclipButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
-noclipButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-noclipButton.Font = Enum.Font.SourceSansBold
-noclipButton.TextScaled = true
-Instance.new("UICorner", noclipButton).CornerRadius = UDim.new(0, 8)
+local NoclipButton = Instance.new("TextButton", MainFrame)
+NoclipButton.Size = UDim2.new(1, 0, 0, 40)
+NoclipButton.Position = UDim2.new(0, 0, 0, 100)
+NoclipButton.Text = "👻 Noclip: OFF"
+NoclipButton.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
+NoclipButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+NoclipButton.Font = Enum.Font.SourceSansBold
+NoclipButton.TextScaled = true
+Instance.new("UICorner", NoclipButton).CornerRadius = UDim.new(0, 12)
 
-noclipButton.MouseButton1Click:Connect(function()
-    noclipAtivo = not noclipAtivo
-    noclipButton.Text = noclipAtivo and "🚫 Noclip ON" or "🚫 Noclip OFF"
+-- Botão AutoSteal
+local AutoStealButton = Instance.new("TextButton", MainFrame)
+AutoStealButton.Size = UDim2.new(1, 0, 0, 40)
+AutoStealButton.Position = UDim2.new(0, 0, 0, 150)
+AutoStealButton.Text = "💎 AutoSteal: OFF"
+AutoStealButton.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
+AutoStealButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+AutoStealButton.Font = Enum.Font.SourceSansBold
+AutoStealButton.TextScaled = true
+Instance.new("UICorner", AutoStealButton).CornerRadius = UDim.new(0, 12)
+
+----------------
+-- FUNÇÕES    --
+----------------
+-- Marcar posição
+MarkButton.MouseButton1Click:Connect(function()
+    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        savedPos = player.Character.HumanoidRootPart.Position
+    end
 end)
 
-RunService.Heartbeat:Connect(function()
+-- Teleportar
+TpButton.MouseButton1Click:Connect(function()
+    if savedPos and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        player.Character.HumanoidRootPart.CFrame = CFrame.new(savedPos)
+    end
+end)
+
+-- Noclip
+NoclipButton.MouseButton1Click:Connect(function()
+    noclipAtivo = not noclipAtivo
+    NoclipButton.Text = noclipAtivo and "👻 Noclip: ON" or "👻 Noclip: OFF"
+    NoclipButton.BackgroundColor3 = noclipAtivo and Color3.fromRGB(0,170,255) or Color3.fromRGB(255,80,80)
+end)
+
+run.Stepped:Connect(function()
     if noclipAtivo and player.Character then
         for _, part in pairs(player.Character:GetDescendants()) do
             if part:IsA("BasePart") then
                 part.CanCollide = false
             end
         end
+    end
+end)
+
+-- AutoSteal toggle
+AutoStealButton.MouseButton1Click:Connect(function()
+    autoStealAtivo = not autoStealAtivo
+    AutoStealButton.Text = autoStealAtivo and "💎 AutoSteal: ON" or "💎 AutoSteal: OFF"
+    AutoStealButton.BackgroundColor3 = autoStealAtivo and Color3.fromRGB(0,170,255) or Color3.fromRGB(255,80,80)
+end)
+
+-- AutoSteal: teleportar por TODAS as coords
+local function teleportAll()
+    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        for i = 1, #stealCoords do
+            player.Character.HumanoidRootPart.CFrame = CFrame.new(stealCoords[i])
+            task.wait(0.5) -- ⏳ intervalo de 0.5s entre cada teleporte
+        end
+    end
+end
+
+-- Ativa o AutoSteal ao interagir com qualquer ProximityPrompt
+ProximityPromptService.PromptTriggered:Connect(function(prompt, plr)
+    if plr == player and autoStealAtivo then
+        teleportAll()
     end
 end)
