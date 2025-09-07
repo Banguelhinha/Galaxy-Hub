@@ -1,4 +1,4 @@
---// Galaxy Hub Simplificado + Infinite Jump + ESP Box + Speed Ajustável + Verificação Automática
+--// 🌌 Galaxy Hub Simplificado + Infinite Jump + ESP Box + Speed AutoFix 🌌
 
 local player = game.Players.LocalPlayer
 local players = game:GetService("Players")
@@ -16,23 +16,26 @@ local currentSpeed = 16 -- velocidade inicial padrão
 -- Coordenadas do AutoSteal
 local stealCoords = {
     Vector3.new(-338, 7, -75),
-    Vector3.new(-334, 7, -74), -- nova coord adicionada
     Vector3.new(-218, 7, -77),
     Vector3.new(-104, 7, -77),
     Vector3.new(4, 7, -79),
     Vector3.new(-101, 7, 76),
     Vector3.new(-219, 7, 74),
     Vector3.new(-326, 7, 74),
-    Vector3.new(16, 7, 73)
+    Vector3.new(16, 7, 73),   -- nova coord
+    Vector3.new(-334, 7, -74) -- nova coord
 }
 
--- Criar GUI
-local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+-- Criar GUI no PlayerGui (corrigido para mobile)
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "GalaxyHubUI"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = player:WaitForChild("PlayerGui")
 
 -- Frame principal
 local Frame = Instance.new("Frame", ScreenGui)
-Frame.Size = UDim2.new(0, 260, 0, 400)
-Frame.Position = UDim2.new(0.5, -130, 0.35, 0)
+Frame.Size = UDim2.new(0.35, 0, 0.6, 0)
+Frame.Position = UDim2.new(0.325, 0, 0.2, 0)
 Frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 Frame.BackgroundTransparency = 0.2
 Frame.Active = true
@@ -254,14 +257,9 @@ ESPButton.MouseButton1Click:Connect(function()
     end
 end)
 
---------------------------
--- SPEED AJUSTÁVEL      --
---------------------------
-local speedSteps = {16, 30, 60, 100, 200}
-local stepIndex = 1
-
+-- Speed Ajustável (clique único)
 local function setSpeed(val)
-    currentSpeed = val
+    currentSpeed = math.clamp(val, 16, 200)
     SpeedButton.Text = "⚡ Speed: " .. currentSpeed
     if player.Character and player.Character:FindFirstChild("Humanoid") then
         player.Character.Humanoid.WalkSpeed = currentSpeed
@@ -269,21 +267,10 @@ local function setSpeed(val)
 end
 
 SpeedButton.MouseButton1Click:Connect(function()
-    stepIndex = stepIndex + 1
-    if stepIndex > #speedSteps then
-        stepIndex = 1
-    end
-    setSpeed(speedSteps[stepIndex])
+    setSpeed(currentSpeed + 5)
 end)
 
-player.CharacterAdded:Connect(function(char)
-    task.wait(1)
-    if char:FindFirstChild("Humanoid") then
-        char.Humanoid.WalkSpeed = currentSpeed
-    end
-end)
-
--- Loop de verificação a cada 3 segundos
+-- Garante que o Speed não bugue (verificação a cada 3s)
 task.spawn(function()
     while true do
         task.wait(3)
@@ -292,5 +279,13 @@ task.spawn(function()
                 player.Character.Humanoid.WalkSpeed = currentSpeed
             end
         end
+    end
+end)
+
+-- Quando respawnar mantém speed
+player.CharacterAdded:Connect(function(char)
+    task.wait(1)
+    if char:FindFirstChild("Humanoid") then
+        char.Humanoid.WalkSpeed = currentSpeed
     end
 end)
