@@ -16,15 +16,14 @@ local currentSpeed = 16 -- velocidade inicial padrão
 -- Coordenadas do AutoSteal
 local stealCoords = {
     Vector3.new(-338, 7, -75),
+    Vector3.new(-334, 7, -74), -- nova coord adicionada
     Vector3.new(-218, 7, -77),
     Vector3.new(-104, 7, -77),
     Vector3.new(4, 7, -79),
     Vector3.new(-101, 7, 76),
     Vector3.new(-219, 7, 74),
     Vector3.new(-326, 7, 74),
-    Vector3.new(16, 7, 73) 
-    Vector3.new(-334, 7, -74) 
-
+    Vector3.new(16, 7, 73)
 }
 
 -- Criar GUI
