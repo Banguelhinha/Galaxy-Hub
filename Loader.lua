@@ -1,4 +1,4 @@
---// Galaxy Hub Simplificado + Infinite Jump + ESP Box + Speed ao Clicar
+--// Galaxy Hub Simplificado + Infinite Jump + ESP Box + Speed Ajustável + Verificação Automática
 
 local player = game.Players.LocalPlayer
 local players = game:GetService("Players")
@@ -22,7 +22,9 @@ local stealCoords = {
     Vector3.new(-101, 7, 76),
     Vector3.new(-219, 7, 74),
     Vector3.new(-326, 7, 74),
-    Vector3.new(16, 7, 73) -- nova coord adicionada
+    Vector3.new(16, 7, 73) 
+    Vector3.new(-334, 7, -74) 
+
 }
 
 -- Criar GUI
@@ -253,7 +255,9 @@ ESPButton.MouseButton1Click:Connect(function()
     end
 end)
 
--- Speed ao clicar (ciclo)
+--------------------------
+-- SPEED AJUSTÁVEL      --
+--------------------------
 local speedSteps = {16, 30, 60, 100, 200}
 local stepIndex = 1
 
@@ -277,5 +281,17 @@ player.CharacterAdded:Connect(function(char)
     task.wait(1)
     if char:FindFirstChild("Humanoid") then
         char.Humanoid.WalkSpeed = currentSpeed
+    end
+end)
+
+-- Loop de verificação a cada 3 segundos
+task.spawn(function()
+    while true do
+        task.wait(3)
+        if player.Character and player.Character:FindFirstChild("Humanoid") then
+            if player.Character.Humanoid.WalkSpeed ~= currentSpeed then
+                player.Character.Humanoid.WalkSpeed = currentSpeed
+            end
+        end
     end
 end)
