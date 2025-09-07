@@ -1,6 +1,7 @@
---// Galaxy Hub Simplificado
+--// Galaxy Hub Simplificado + Infinite Jump + ESP Box
 
 local player = game.Players.LocalPlayer
+local players = game:GetService("Players")
 local uis = game:GetService("UserInputService")
 local run = game:GetService("RunService")
 local ProximityPromptService = game:GetService("ProximityPromptService")
@@ -8,6 +9,8 @@ local ProximityPromptService = game:GetService("ProximityPromptService")
 local noclipAtivo = false
 local savedPos = nil
 local autoStealAtivo = false
+local infJumpAtivo = false
+local espAtivo = false
 
 -- Coordenadas do AutoSteal
 local stealCoords = {
@@ -25,8 +28,8 @@ local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
 
 -- Frame principal
 local Frame = Instance.new("Frame", ScreenGui)
-Frame.Size = UDim2.new(0, 270, 0, 320)
-Frame.Position = UDim2.new(0.5, -135, 0.4, 0)
+Frame.Size = UDim2.new(0, 270, 0, 420)
+Frame.Position = UDim2.new(0.5, -135, 0.35, 0)
 Frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 Frame.BackgroundTransparency = 0.2
 Frame.Active = true
@@ -85,49 +88,27 @@ MainFrame.Size = UDim2.new(1, -20, 1, -60)
 MainFrame.Position = UDim2.new(0, 10, 0, 50)
 MainFrame.BackgroundTransparency = 1
 
--- Botão marcar posição
-local MarkButton = Instance.new("TextButton", MainFrame)
-MarkButton.Size = UDim2.new(1, 0, 0, 40)
-MarkButton.Position = UDim2.new(0, 0, 0, 0)
-MarkButton.Text = "📍 Marcar Posição"
-MarkButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
-MarkButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-MarkButton.Font = Enum.Font.SourceSansBold
-MarkButton.TextScaled = true
-Instance.new("UICorner", MarkButton).CornerRadius = UDim.new(0, 12)
+-- Função criar botão
+local function criarBotao(texto, posY, cor)
+    local btn = Instance.new("TextButton", MainFrame)
+    btn.Size = UDim2.new(1, 0, 0, 40)
+    btn.Position = UDim2.new(0, 0, 0, posY)
+    btn.Text = texto
+    btn.BackgroundColor3 = cor or Color3.fromRGB(0,170,255)
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Font = Enum.Font.SourceSansBold
+    btn.TextScaled = true
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 12)
+    return btn
+end
 
--- Botão teleportar
-local TpButton = Instance.new("TextButton", MainFrame)
-TpButton.Size = UDim2.new(1, 0, 0, 40)
-TpButton.Position = UDim2.new(0, 0, 0, 50)
-TpButton.Text = "🚀 Teleportar à Posição"
-TpButton.BackgroundColor3 = Color3.fromRGB(100, 200, 100)
-TpButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-TpButton.Font = Enum.Font.SourceSansBold
-TpButton.TextScaled = true
-Instance.new("UICorner", TpButton).CornerRadius = UDim.new(0, 12)
-
--- Botão Noclip
-local NoclipButton = Instance.new("TextButton", MainFrame)
-NoclipButton.Size = UDim2.new(1, 0, 0, 40)
-NoclipButton.Position = UDim2.new(0, 0, 0, 100)
-NoclipButton.Text = "👻 Noclip: OFF"
-NoclipButton.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
-NoclipButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-NoclipButton.Font = Enum.Font.SourceSansBold
-NoclipButton.TextScaled = true
-Instance.new("UICorner", NoclipButton).CornerRadius = UDim.new(0, 12)
-
--- Botão AutoSteal
-local AutoStealButton = Instance.new("TextButton", MainFrame)
-AutoStealButton.Size = UDim2.new(1, 0, 0, 40)
-AutoStealButton.Position = UDim2.new(0, 0, 0, 150)
-AutoStealButton.Text = "💎 AutoSteal: OFF"
-AutoStealButton.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
-AutoStealButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-AutoStealButton.Font = Enum.Font.SourceSansBold
-AutoStealButton.TextScaled = true
-Instance.new("UICorner", AutoStealButton).CornerRadius = UDim.new(0, 12)
+-- Botões
+local MarkButton = criarBotao("📍 Marcar Posição", 0, Color3.fromRGB(0,170,255))
+local TpButton = criarBotao("🚀 Teleportar à Posição", 50, Color3.fromRGB(100,200,100))
+local NoclipButton = criarBotao("👻 Noclip: OFF", 100, Color3.fromRGB(255,80,80))
+local AutoStealButton = criarBotao("💎 AutoSteal: OFF", 150, Color3.fromRGB(255,80,80))
+local InfJumpButton = criarBotao("🌀 Infinite Jump: OFF", 200, Color3.fromRGB(255,80,80))
+local ESPButton = criarBotao("👁️ ESP: OFF", 250, Color3.fromRGB(255,80,80))
 
 ----------------
 -- FUNÇÕES    --
@@ -170,19 +151,103 @@ AutoStealButton.MouseButton1Click:Connect(function()
     AutoStealButton.BackgroundColor3 = autoStealAtivo and Color3.fromRGB(0,170,255) or Color3.fromRGB(255,80,80)
 end)
 
--- AutoSteal: teleportar por TODAS as coords
+-- AutoSteal função
 local function teleportAll()
     if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
         for i = 1, #stealCoords do
             player.Character.HumanoidRootPart.CFrame = CFrame.new(stealCoords[i])
-            task.wait(0.5) -- ⏳ intervalo de 0.5s entre cada teleporte
+            task.wait(0.5)
         end
     end
 end
 
--- Ativa o AutoSteal ao interagir com qualquer ProximityPrompt
 ProximityPromptService.PromptTriggered:Connect(function(prompt, plr)
     if plr == player and autoStealAtivo then
         teleportAll()
+    end
+end)
+
+-- Infinite Jump
+InfJumpButton.MouseButton1Click:Connect(function()
+    infJumpAtivo = not infJumpAtivo
+    InfJumpButton.Text = infJumpAtivo and "🌀 Infinite Jump: ON" or "🌀 Infinite Jump: OFF"
+    InfJumpButton.BackgroundColor3 = infJumpAtivo and Color3.fromRGB(0,170,255) or Color3.fromRGB(255,80,80)
+end)
+
+uis.JumpRequest:Connect(function()
+    if infJumpAtivo and player.Character and player.Character:FindFirstChild("Humanoid") then
+        player.Character.Humanoid:ChangeState("Jumping")
+    end
+end)
+
+-- ESP (Box + Nome)
+local function criarESP(plr)
+    if plr == player then return end
+
+    local function aplicarESP(char)
+        -- Box
+        if char:FindFirstChild("HumanoidRootPart") then
+            local box = Instance.new("BoxHandleAdornment")
+            box.Name = "ESPBox"
+            box.Size = Vector3.new(4, 6, 2)
+            box.Color3 = Color3.fromRGB(0,170,255)
+            box.Transparency = 0.5
+            box.ZIndex = 0
+            box.AlwaysOnTop = true
+            box.Adornee = char.HumanoidRootPart
+            box.Parent = char.HumanoidRootPart
+        end
+
+        -- Nome
+        if char:FindFirstChild("Head") then
+            local billboard = Instance.new("BillboardGui")
+            billboard.Name = "ESPName"
+            billboard.Adornee = char.Head
+            billboard.Size = UDim2.new(0,200,0,50)
+            billboard.StudsOffset = Vector3.new(0,2,0)
+            billboard.AlwaysOnTop = true
+            billboard.Parent = char
+
+            local text = Instance.new("TextLabel", billboard)
+            text.Size = UDim2.new(1,0,1,0)
+            text.BackgroundTransparency = 1
+            text.Text = plr.Name
+            text.TextColor3 = Color3.fromRGB(0,170,255)
+            text.TextStrokeTransparency = 0
+            text.Font = Enum.Font.SourceSansBold
+            text.TextScaled = true
+        end
+    end
+
+    if plr.Character then
+        aplicarESP(plr.Character)
+    end
+    plr.CharacterAdded:Connect(function(newChar)
+        task.wait(1)
+        aplicarESP(newChar)
+    end)
+end
+
+ESPButton.MouseButton1Click:Connect(function()
+    espAtivo = not espAtivo
+    ESPButton.Text = espAtivo and "👁️ ESP: ON" or "👁️ ESP: OFF"
+    ESPButton.BackgroundColor3 = espAtivo and Color3.fromRGB(0,170,255) or Color3.fromRGB(255,80,80)
+
+    if espAtivo then
+        for _, plr in pairs(players:GetPlayers()) do
+            criarESP(plr)
+        end
+        players.PlayerAdded:Connect(criarESP)
+    else
+        for _, plr in pairs(players:GetPlayers()) do
+            if plr.Character then
+                if plr.Character:FindFirstChild("HumanoidRootPart") and plr.Character.HumanoidRootPart:FindFirstChild("ESPBox") then
+                    plr.Character.HumanoidRootPart.ESPBox:Destroy()
+                end
+                if plr.Character:FindFirstChild("ESPName") then
+                    plr.Character.ESPName:Destroy()
+                end
+            end
+        end
     end
 end)
