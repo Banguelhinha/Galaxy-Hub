@@ -1,4 +1,4 @@
---// Galaxy Hub Simplificado + Infinite Jump + ESP Box + Speed Configurável
+--// Galaxy Hub Simplificado + Infinite Jump + ESP Box + Speed ao Clicar
 
 local player = game.Players.LocalPlayer
 local players = game:GetService("Players")
@@ -112,18 +112,6 @@ local AutoStealButton = criarBotao("💎 AutoSteal: OFF", 135, Color3.fromRGB(25
 local InfJumpButton = criarBotao("🌀 Infinite Jump: OFF", 180, Color3.fromRGB(255,80,80))
 local ESPButton = criarBotao("👁️ ESP: OFF", 225, Color3.fromRGB(255,80,80))
 local SpeedButton = criarBotao("⚡ Speed: "..currentSpeed, 270, Color3.fromRGB(0,170,255))
-
--- Caixa de entrada para configurar speed
-local SpeedBox = Instance.new("TextBox", MainFrame)
-SpeedBox.Size = UDim2.new(1, 0, 0, 40)
-SpeedBox.Position = UDim2.new(0, 0, 0, 315)
-SpeedBox.PlaceholderText = "Digite a velocidade..."
-SpeedBox.BackgroundColor3 = Color3.fromRGB(30,30,30)
-SpeedBox.TextColor3 = Color3.fromRGB(255,255,255)
-SpeedBox.Font = Enum.Font.SourceSansBold
-SpeedBox.TextScaled = true
-SpeedBox.Visible = false
-Instance.new("UICorner", SpeedBox).CornerRadius = UDim.new(0, 12)
 
 ----------------
 -- FUNÇÕES    --
@@ -265,34 +253,26 @@ ESPButton.MouseButton1Click:Connect(function()
     end
 end)
 
--- Função setar velocidade
+-- Speed ao clicar (ciclo)
+local speedSteps = {16, 30, 60, 100, 200}
+local stepIndex = 1
+
 local function setSpeed(val)
-    currentSpeed = math.clamp(val, 16, 200)
+    currentSpeed = val
     SpeedButton.Text = "⚡ Speed: " .. currentSpeed
     if player.Character and player.Character:FindFirstChild("Humanoid") then
         player.Character.Humanoid.WalkSpeed = currentSpeed
     end
 end
 
--- Abrir caixa de texto ao clicar
 SpeedButton.MouseButton1Click:Connect(function()
-    SpeedBox.Visible = true
-    SpeedBox.Text = ""
-    SpeedBox:CaptureFocus()
-end)
-
--- Aplicar valor quando confirmar
-SpeedBox.FocusLost:Connect(function(enterPressed)
-    if enterPressed then
-        local val = tonumber(SpeedBox.Text)
-        if val then
-            setSpeed(val)
-        end
+    stepIndex = stepIndex + 1
+    if stepIndex > #speedSteps then
+        stepIndex = 1
     end
-    SpeedBox.Visible = false
+    setSpeed(speedSteps[stepIndex])
 end)
 
--- Garantir que o personagem mantenha a velocidade ao respawnar
 player.CharacterAdded:Connect(function(char)
     task.wait(1)
     if char:FindFirstChild("Humanoid") then
